@@ -28,16 +28,16 @@ function conv.Lua_conv(x, k)
 	return r
 end
 
-local epsilon = 1e-12
+ffi = require('ffi')
+C = ffi.load(paths.cwd() .. '/libconv.so')
+ffi.cdef [[
+	void conv(double *x, double *k, double *r, int x_c, int r_r, int r_c, int k_s)
+]]
 
-local x = torch.rand(10,10)
-local k = torch.rand(9,9)
-print("Test 1:", torch.sum(conv.Lua_conv(x, k) - torch.conv2(x,k)) < epsilon and 'Passed' or 'Failed')
-local x = torch.rand(100,100)
-local k = torch.rand(9,9)
-print("Test 2:", torch.sum(conv.Lua_conv(x, k) - torch.conv2(x,k)) < epsilon and 'Passed' or 'Failed')
-local x = torch.rand(1000,1000)
-local k = torch.rand(9,9)
-print("Test 3:", torch.sum(conv.Lua_conv(x, k) - torch.conv2(x,k)) < epsilon and 'Passed' or 'Failed')
+function conv.C_conv(x, k)
+	r = torch.DoubleTensor(x:size(1)-k:size(1)+1, x:size(2)-k:size(2)+1)
+	C.conv(torch.data(x), torch.data(k), torch.data(r), x:size(2), x:size(1)-k:size(1)+1, x:size(2)-k:size(2)+1, k:size(1))
+	return r
+end
 
 return conv
