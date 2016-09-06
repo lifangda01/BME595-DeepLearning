@@ -19,6 +19,10 @@ end
 -- create the table of matrices Θ
 function NeuralNetwork.build(layer_sizes)
 	network = {}
+	if #layer_sizes < 2 then
+		print("ERROR: must have at least 2 layers!")
+		return
+	end
 	for i=1,#layer_sizes-1 do
 		-- Don't forget the bias unit
 		network[i] = torch.Tensor(layer_sizes[i+1], layer_sizes[i]+1):
@@ -36,7 +40,10 @@ end
 -- feedforward pass single vector
 -- feedforward pass transposed design matrix (should come free)
 function NeuralNetwork.forward(input)
-	-- FIXME: ERROR CHECKING
+	if input:size(1)+1 ~= network[1]:size(2) then
+		print("ERROR: input and layer size mismatch!")
+		return
+	end
 	-- Don't forget the bias unit
 	local result
 	for i,theta in ipairs(network) do
@@ -49,15 +56,5 @@ function NeuralNetwork.forward(input)
 	end	
 	return result
 end
-
-local function debug()
-	NeuralNetwork.build({4,3,2,1})
-	for i=1,#network do
-		print(NeuralNetwork.getLayer(i))
-	end
-	NeuralNetwork.forward(torch.Tensor(4,4):zero())
-end
-
--- debug()
 
 return NeuralNetwork

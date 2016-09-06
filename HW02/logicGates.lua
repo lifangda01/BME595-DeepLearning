@@ -1,7 +1,7 @@
 require 'math'
 require 'torch'
 
-local NN = require 'NeuralNetwork.lua'
+local NN = require 'NeuralNetwork'
 local logicGates = {}
 local epsilon = 1e-4
 
@@ -70,6 +70,12 @@ local function debug()
 	print( (logicGates.NOT(logicGates.XOR(false,true)) == false) and "Passed" or "Failed")
 	print( (logicGates.NOT(logicGates.XOR(true,false)) == false) and "Passed" or "Failed")
 	print( (logicGates.NOT(logicGates.XOR(true,true)) == true) and "Passed" or "Failed")
+
+	print("-----------Testing ANDOR-----------")
+	print( (logicGates.OR(logicGates.AND(false,false),true) == true) and "Passed" or "Failed")
+	print( (logicGates.OR(logicGates.AND(false,true),false) == false) and "Passed" or "Failed")
+	print( (logicGates.OR(logicGates.AND(true,false),false) == false) and "Passed" or "Failed")
+	print( (logicGates.OR(logicGates.AND(true,true),false) == true) and "Passed" or "Failed")
 end
 
 debug()
