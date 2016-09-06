@@ -5,8 +5,20 @@ require 'torch'
 local NeuralNetwork = {}
 local network = {}
 
+-- Prepend ones separately for 1D and 2D tensor
+local function prepend_ones(input)
+	-- 2D
+	if #input:size() == 2 then
+		return torch.cat(torch.ones(1,input:size(2)), input, 1)
+	-- 1D
+	else
+		return torch.cat(torch.ones(1), input)
+	end
+end
+
 -- create the table of matrices Θ
 function NeuralNetwork.build(layer_sizes)
+	network = {}
 	for i=1,#layer_sizes-1 do
 		-- Don't forget the bias unit
 		network[i] = torch.Tensor(layer_sizes[i+1], layer_sizes[i]+1):
@@ -22,21 +34,30 @@ function NeuralNetwork.getLayer(layer)
 end
 
 -- feedforward pass single vector
-function NeuralNetwork.forward()
-	
-end
-
 -- feedforward pass transposed design matrix (should come free)
--- [2D DoubleTensor] forward([2D DoubleTensor] input)
-
-function debug()
-	-- NeuralNetwork.build({4,3,2,1})
-	-- print(NeuralNetwork.getLayer(1))
-	-- print(NeuralNetwork.getLayer(2))
-	-- print(NeuralNetwork.getLayer(3))
-	
+function NeuralNetwork.forward(input)
+	-- FIXME: ERROR CHECKING
+	-- Don't forget the bias unit
+	local result
+	for i,theta in ipairs(network) do
+		if i == 1 then
+			result = theta * prepend_ones(input)
+		else
+			result = theta * prepend_ones(result)
+		end
+		result:sigmoid()
+	end	
+	return result
 end
 
-debug()
+local function debug()
+	NeuralNetwork.build({4,3,2,1})
+	for i=1,#network do
+		print(NeuralNetwork.getLayer(i))
+	end
+	NeuralNetwork.forward(torch.Tensor(4,4):zero())
+end
+
+-- debug()
 
 return NeuralNetwork
