@@ -9,7 +9,7 @@ local a = {}
 local z = {}
 
 -- Prepend ones separately for 1D and 2D tensor
-local function prepend_ones(input)
+local function prependOnes(input)
 	-- 2D
 	if #input:size() == 2 then
 		return torch.cat(torch.ones(1,input:size(2)), input, 1)
@@ -62,25 +62,27 @@ function NeuralNetwork.forward(input)
 		return
 	end
 	-- The activation of first layer is the input itself and bias
-	a[1] = prepend_ones(input:clone())
+	-- a[1] = prependOnes(input:clone())
+	a[1] = input:clone()
 	-- Don't forget the bias unit
 	local result
 	for i,theta in ipairs(Theta) do
 		if i == 1 then
-			result = theta * prepend_ones(input)
+			result = theta * prependOnes(input)
 		else
-			result = theta * prepend_ones(result)
+			result = theta * prependOnes(result)
 		end
 		-- Store the weighted input z
 		z[i+1] = result:clone()
 		result:sigmoid()
 		-- Store the activation a
 		-- Activation of the bias unit is 1, also the last layer doesn't have bias
-		if i == #Theta then
-			a[i+1] = result:clone()
-		else
-			a[i+1] = prepend_ones(result:clone())
-		end
+		-- if i == #Theta then
+		-- 	a[i+1] = result:clone()
+		-- else
+		-- 	a[i+1] = prependOnes(result:clone())
+		-- end
+		a[i+1] = result:clone()
 	end	
 	return result
 end
@@ -101,20 +103,29 @@ function NeuralNetwork.backward(target, loss)
 	for i=nLayers,1,-1 do
 		-- Compute the delta error at layer i
 		if i == nLayers then
-			print('i', i)
-			print('a[i]', a[i])
+			-- print('i', i)
+			-- print('a[i]', a[i])
 			delta = (a[i] - target):cmul(a[i]):cmul(1 - a[i])
+			-- print('delta', delta)
+		elseif i == nLayers-1 then
+			-- print('i', i)
+			-- print('a[i]', a[i])
+			-- print('Theta[i]', Theta[i])
+			dE_dTheta[i] = ( prependOnes(a[i]) * delta:t() ):t()
+			-- print('dE_dTheta[i]', dE_dTheta[i])
+			delta = ( Theta[i]:t() * delta ) : cmul( prependOnes(a[i]) ) : cmul( 1 - prependOnes(a[i]) )
+			-- print('delta', delta)
 		else
-			print('i', i)
-			print('delta', delta)
-			print('a[i]', a[i])
-			print('Theta[i]', Theta[i])
-			dE_dTheta[i] = a[i] * delta:t()
-			print('dE_dTheta[i]', dE_dTheta[i])
-			delta = (Theta[i]:t() * delta):cmul(a[i]):cmul(1 - a[i])
+			-- print('i', i)
+			-- print('a[i]', a[i])
+			-- print('Theta[i]', Theta[i])
+			dE_dTheta[i] = ( prependOnes(a[i]) * delta:sub(2, delta:size(1)):t() ):t()
+			-- print('dE_dTheta[i]', dE_dTheta[i])
+			delta = ( Theta[i]:t() * delta:sub(2, delta:size(1)) ) : cmul( prependOnes(a[i]) ) : cmul( 1 - prependOnes(a[i]) )
+			-- print('delta', delta)
 		end
 	end
-	print("Error:", MSE(a[nLayers], target))
+	-- print("Error:", MSE(a[nLayers], target))
 	-- FIXME: should return NOTHING!!!
 	return MSE(a[nLayers], target)
 end

@@ -31,7 +31,7 @@ function NOT.train()
 	local input, target
 	local maxIter = 100000
 	local E = torch.Tensor(maxIter)
-	local etha = 0.5
+	local etha = 1.0
 	input = torch.Tensor({
 		{0, 1}
 		})
@@ -171,24 +171,24 @@ function XOR.forward(x, y)
 end
 
 local function debug()
-	-- NOT.train()
-	-- print("-----------Testing NOT-----------")
-	-- print( (NOT.forward(true) == false) and "Passed" or "Failed")
-	-- print( (NOT.forward(false) == true) and "Passed" or "Failed")
+	NOT.train()
+	print("-----------Testing NOT-----------")
+	print( (NOT.forward(true) == false) and "Passed" or "Failed")
+	print( (NOT.forward(false) == true) and "Passed" or "Failed")
 
-	-- AND.train()
-	-- print("-----------Testing AND-----------")
-	-- print( (AND.forward(false,false) == false) and "Passed" or "Failed")
-	-- print( (AND.forward(false,true) == false) and "Passed" or "Failed")
-	-- print( (AND.forward(true,false) == false) and "Passed" or "Failed")
-	-- print( (AND.forward(true,true) == true) and "Passed" or "Failed")
+	AND.train()
+	print("-----------Testing AND-----------")
+	print( (AND.forward(false,false) == false) and "Passed" or "Failed")
+	print( (AND.forward(false,true) == false) and "Passed" or "Failed")
+	print( (AND.forward(true,false) == false) and "Passed" or "Failed")
+	print( (AND.forward(true,true) == true) and "Passed" or "Failed")
 
-	-- OR.train()
-	-- print("-----------Testing OR-----------")
-	-- print( (OR.forward(false,false) == false) and "Passed" or "Failed")
-	-- print( (OR.forward(false,true) == true) and "Passed" or "Failed")
-	-- print( (OR.forward(true,false) == true) and "Passed" or "Failed")
-	-- print( (OR.forward(true,true) == true) and "Passed" or "Failed")
+	OR.train()
+	print("-----------Testing OR-----------")
+	print( (OR.forward(false,false) == false) and "Passed" or "Failed")
+	print( (OR.forward(false,true) == true) and "Passed" or "Failed")
+	print( (OR.forward(true,false) == true) and "Passed" or "Failed")
+	print( (OR.forward(true,true) == true) and "Passed" or "Failed")
 
 	XOR.train()
 	print("-----------Testing XOR-----------")
