@@ -78,6 +78,6 @@ local function debug()
 	print( (logicGates.OR(logicGates.AND(true,true),false) == true) and "Passed" or "Failed")
 end
 
-debug()
+-- debug()
 
 return logicGates
