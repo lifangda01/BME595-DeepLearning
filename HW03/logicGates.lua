@@ -31,7 +31,7 @@ function NOT.train()
 	local input, target
 	local maxIter = 100000
 	local E = torch.Tensor(maxIter)
-	local etha = 1.0
+	local eta = 1.0
 	input = torch.Tensor({
 		{0, 1}
 		})
@@ -47,7 +47,7 @@ function NOT.train()
 			print("Training finished at iteration", i)
 			break 
 		end
-		NN.updateParams(etha)
+		NN.updateParams(eta)
 	end
 	-- gnuplot.plot(E)
 	-- print(NN.getLayer(1))
@@ -67,7 +67,7 @@ function AND.train()
 	local input, target
 	local maxIter = 100000
 	local E = torch.Tensor(maxIter)
-	local etha = 1.0
+	local eta = 1.0
 	input = torch.Tensor({
 		{0, 0, 1, 1},
 		{0, 1, 0, 1}
@@ -84,7 +84,7 @@ function AND.train()
 			print("Training finished at iteration", i)
 			break 
 		end
-		NN.updateParams(etha)
+		NN.updateParams(eta)
 	end
 	-- gnuplot.plot(E)
 	-- print(NN.getLayer(1))
@@ -104,7 +104,7 @@ function OR.train()
 	local input, target
 	local maxIter = 100000
 	local E = torch.Tensor(maxIter)
-	local etha = 1.0
+	local eta = 1.0
 	input = torch.Tensor({
 		{0, 0, 1, 1},
 		{0, 1, 0, 1}
@@ -121,7 +121,7 @@ function OR.train()
 			print("Training finished at iteration", i)
 			break 
 		end
-		NN.updateParams(etha)
+		NN.updateParams(eta)
 	end
 	-- gnuplot.plot(E)
 	-- print(NN.getLayer(1))
@@ -142,7 +142,7 @@ function XOR.train(x, y)
 	local input, target
 	local maxIter = 100000
 	local E = torch.Tensor(maxIter)
-	local etha = 1.0
+	local eta = 1.0
 	input = torch.Tensor({
 		{0, 0, 1, 1},
 		{0, 1, 0, 1}
@@ -159,7 +159,7 @@ function XOR.train(x, y)
 			print("Training finished at iteration", i)
 			break 
 		end
-		NN.updateParams(etha)
+		NN.updateParams(eta)
 	end
 	-- gnuplot.plot(E)
 	-- print(NN.getLayer(1))
