@@ -8,19 +8,17 @@ local trainset = mnist.traindataset()
 local testset = mnist.testdataset()
 
 local img2num = {}
-local oneHotLabels = {}
-local trainImgs
-local testImgs
+local oneHotLabels = {}	
+local trainImgs = trainset.data
+local testImgs = testset.data
 local trainLabels
 local testLabels
 
 -- Return the oneHot labeled tensor
 local function oneHot(mnist_label)
-	local one_hot = torch.zeros(10, mnist_label:size(1))
 	-- Fix the labels to be 1-10 for indexing in scatter
-	mnist_label = (mnist_label+1):view(1,-1):long()
-	one_hot:scatter(1, mnist_label, 1)
-	return one_hot
+	mnist_label = (mnist_label+1):view(-1,1):long()
+	return torch.zeros(mnist_label:size(1), 10):scatter(2, mnist_label, 1)
 end
 
 -- OneHot encode the labels
@@ -31,79 +29,84 @@ local function preprocess()
 	if f == nil then
 		-- Do oneHot here and store to the file
 		print("Writing label object to disk...")
-		trainLabels = oneHot(trainset.label)
-		testLabels = oneHot(testset.label)
-		table.insert(oneHotLabels, trainLabels)
-		table.insert(oneHotLabels, testLabels)
+		table.insert(oneHotLabels, oneHot(trainset.label))
+		table.insert(oneHotLabels, oneHot(testset.label))
 		f = torch.DiskFile(fname, 'w')
 		f:writeObject(oneHotLabels)
+		f:close()
 	else
 		print("Reading label object from disk...")
 		oneHotLabels = f:readObject()
 	end
-	trainImgs = trainset.data
-	testImgs = testset.data
+	trainLabels = oneHotLabels[1]
+	testLabels = oneHotLabels[2]
 	print("Preprocessing finished...")
+end
+
+local function test()
+	local nCorrect = 0
+	for i = 1, testset.size do
+		local _, l = torch.max(img2num.forward(testImgs[i]:double()),1)
+		if l[1][1]-1 == testset.label[i] then
+			nCorrect = nCorrect+1
+		end
+	end
+	print(nCorrect, "/", testset.size)
+end
+
+local function saveNN()
+	local fname = 'trainedNetwork.asc'
+	local f = torch.DiskFile(fname, 'w')
+	f:writeObject(NN)
+	f:close()
+end
+
+local function loadNN()
+	local fname = 'trainedNetwork.asc'
+	local f = torch.DiskFile(fname, 'r')
+	NN = f:readObject(NN)
+	f:close()	
 end
 
 function img2num.train()
 	preprocess()
 	-- 28x28 pixels for each image, 30 hidden neurons, onehot labels
-	NN.build({784, 30, 10})
-	local maxIter = 100000
+	NN.build({784, 100, 10})
 	local batchSize = 10
-	local maxEpoch = 10
-	local eta = 0.01
-	local E = torch.Tensor(maxIter)
+	local maxEpoch = 50
+	local eta = 0.05
 	-- X is batch input, Y is batch target
-	local X = torch.Tensor(784, batchSize)
-	local Y = torch.Tensor(10, batchSize)
+	local X = torch.Tensor(batchSize, 784)
+	local Y = torch.Tensor(batchSize, 10)
 	for k = 1, maxEpoch do
 		-- Per epoch
+		print("Epoch", k)
 		-- Shuffle the training set
 		local shuffle = torch.randperm(trainset.size)
-		for i = 1, trainset.size, batchSize do
+		for i = 1, trainset.size/batchSize do
 			-- Per batch
 			for j = 1, batchSize do
-				X:select(2,j) = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(-1,1)
-				Y:select(2,j) = trainLabels[shuffle[ (i-1)*batchSize+j ]]
+				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):double() / 255.0
+				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):double()
 			end
-			NN.forward(X)
-			NN.backward(Y, 'MSE')
+			NN.forward(X:t())
+			NN.backward(Y:t(), 'MSE')
 			NN.updateParams(eta)
 		end
 		-- Check the results
 		test()
 	end
-	gnuplot.plot(E)
 end
 
 function img2num.forward(img)
 	return NN.forward(img:view(-1,1))
 end
 
-local function test()
-	local nCorrect = 0
-	for i = 1, test.size do
-		local l = torch.max(img2num.forward(testImgs[i]),1)[1]
-		if l == testset.labels[i] then
-			nCorrect = nCorrect+1
-		end
-	end
-	print(nCorrect, "/", test.size)
+local function debug()
+	loadNN()
+	test()
 end
 
-local function debug( )
-	img2num.train()
-end
-
-debug()
-
--- print (oneHot(testset.label))
--- print(trainset.size, testset.size)
-
--- ex = trainset[10]
--- print (ex.x) -- the input (a 28x28 ByteTensor)
--- print (ex.y) -- the label (0--9)
+-- debug()
 
 return img2num

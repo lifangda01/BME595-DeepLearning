@@ -49,12 +49,9 @@ function NOT.train()
 		end
 		NN.updateParams(eta)
 	end
-	-- gnuplot.plot(E)
-	-- print(NN.getLayer(1))
 end
 
 function NOT.forward(x)
-	-- print( NN.forward(torch.Tensor({ B2I(x) })) : view(-1,1)[1][1] )
 	return I2B( NN.forward(torch.Tensor({ B2I(x) })) : view(-1,1)[1][1] )
 end
 
@@ -86,12 +83,9 @@ function AND.train()
 		end
 		NN.updateParams(eta)
 	end
-	-- gnuplot.plot(E)
-	-- print(NN.getLayer(1))
 end
 
 function AND.forward(x, y)
-	-- print( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 	return I2B( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 end
 
@@ -123,12 +117,9 @@ function OR.train()
 		end
 		NN.updateParams(eta)
 	end
-	-- gnuplot.plot(E)
-	-- print(NN.getLayer(1))
 end
 
 function OR.forward(x, y)
-		-- print( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 	return I2B( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 end
 
@@ -161,22 +152,21 @@ function XOR.train(x, y)
 		end
 		NN.updateParams(eta)
 	end
-	-- gnuplot.plot(E)
-	-- print(NN.getLayer(1))
 end
 
 function XOR.forward(x, y)
-	-- print( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 	return I2B( NN.forward(torch.Tensor({ B2I(x), B2I(y) })) : view(-1,1)[1][1] )
 end
 
 local function debug()
 	NOT.train()
+	print(NN.getLayer(1))
 	print("-----------Testing NOT-----------")
 	print( (NOT.forward(true) == false) and "Passed" or "Failed")
 	print( (NOT.forward(false) == true) and "Passed" or "Failed")
 
 	AND.train()
+	print(NN.getLayer(1))
 	print("-----------Testing AND-----------")
 	print( (AND.forward(false,false) == false) and "Passed" or "Failed")
 	print( (AND.forward(false,true) == false) and "Passed" or "Failed")
@@ -184,6 +174,7 @@ local function debug()
 	print( (AND.forward(true,true) == true) and "Passed" or "Failed")
 
 	OR.train()
+	print(NN.getLayer(1))
 	print("-----------Testing OR-----------")
 	print( (OR.forward(false,false) == false) and "Passed" or "Failed")
 	print( (OR.forward(false,true) == true) and "Passed" or "Failed")
@@ -191,6 +182,8 @@ local function debug()
 	print( (OR.forward(true,true) == true) and "Passed" or "Failed")
 
 	XOR.train()
+	print(NN.getLayer(1))
+	print(NN.getLayer(2))
 	print("-----------Testing XOR-----------")
 	print( (XOR.forward(false,false) == false) and "Passed" or "Failed")
 	print( (XOR.forward(false,true) == true) and "Passed" or "Failed")
@@ -198,6 +191,6 @@ local function debug()
 	print( (XOR.forward(true,true) == false) and "Passed" or "Failed")
 end
 
-debug()
+-- debug()
 
 return logicGates

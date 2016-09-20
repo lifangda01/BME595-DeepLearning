@@ -62,7 +62,6 @@ function NeuralNetwork.forward(input)
 		return
 	end
 	-- The activation of first layer is the input itself and bias
-	-- a[1] = prependOnes(input:clone())
 	a[1] = input:clone()
 	-- Don't forget the bias unit
 	local result
@@ -76,12 +75,6 @@ function NeuralNetwork.forward(input)
 		z[i+1] = result:clone()
 		result:sigmoid()
 		-- Store the activation a
-		-- Activation of the bias unit is 1, also the last layer doesn't have bias
-		-- if i == #Theta then
-		-- 	a[i+1] = result:clone()
-		-- else
-		-- 	a[i+1] = prependOnes(result:clone())
-		-- end
 		a[i+1] = result:clone()
 	end	
 	return result
@@ -95,37 +88,20 @@ function NeuralNetwork.backward(target, loss)
 	-- In order to get dE_dTheta, we need to get error at every layer
 	-- So we should start from the last layer
 	-- To begin, let's calculate the error first
-	-- print('a', a)
-	-- print('Theta', Theta)
-	-- print('nLayers', #Theta + 1)
 	local nLayers = #Theta + 1
 	local delta
 	for i=nLayers,1,-1 do
 		-- Compute the delta error at layer i
 		if i == nLayers then
-			-- print('i', i)
-			-- print('a[i]', a[i])
 			delta = (a[i] - target):cmul(a[i]):cmul(1 - a[i])
-			-- print('delta', delta)
 		elseif i == nLayers-1 then
-			-- print('i', i)
-			-- print('a[i]', a[i])
-			-- print('Theta[i]', Theta[i])
 			dE_dTheta[i] = ( prependOnes(a[i]) * delta:t() ):t()
-			-- print('dE_dTheta[i]', dE_dTheta[i])
 			delta = ( Theta[i]:t() * delta ) : cmul( prependOnes(a[i]) ) : cmul( 1 - prependOnes(a[i]) )
-			-- print('delta', delta)
 		else
-			-- print('i', i)
-			-- print('a[i]', a[i])
-			-- print('Theta[i]', Theta[i])
 			dE_dTheta[i] = ( prependOnes(a[i]) * delta:sub(2, delta:size(1)):t() ):t()
-			-- print('dE_dTheta[i]', dE_dTheta[i])
 			delta = ( Theta[i]:t() * delta:sub(2, delta:size(1)) ) : cmul( prependOnes(a[i]) ) : cmul( 1 - prependOnes(a[i]) )
-			-- print('delta', delta)
 		end
 	end
-	-- print("Error:", MSE(a[nLayers], target))
 	-- FIXME: should return NOTHING!!!
 	return MSE(a[nLayers], target)
 end
