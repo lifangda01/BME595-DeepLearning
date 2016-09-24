@@ -46,6 +46,7 @@ end
 local function test()
 	local nCorrect = 0
 	for i = 1, testset.size do
+		-- Find the max along the row axis
 		local _, l = torch.max(img2num.forward(testImgs[i]:double()),1)
 		if l[1][1]-1 == testset.label[i] then
 			nCorrect = nCorrect+1
@@ -64,7 +65,7 @@ end
 local function loadNN()
 	local fname = 'trainedNetwork.asc'
 	local f = torch.DiskFile(fname, 'r')
-	NN = f:readObject(NN)
+	NN = f:readObject()
 	f:close()	
 end
 

@@ -42,3 +42,6 @@ luac.out
 # Stuff from C
 *.o
 *.so
+
+# Project specific
+*.asc

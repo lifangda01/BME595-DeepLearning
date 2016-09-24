@@ -15,6 +15,15 @@ local trainLabels
 local testLabels
 local net
 
+-- Network parameters
+local batchSize = 10
+local maxEpoch = 50
+local eta = 0.05
+local nHidden = 30
+local useGPU = true
+local save = false
+local load = false
+
 -- Return the oneHot labeled tensor
 local function oneHot(mnist_label)
 	-- Fix the labels to be 1-10 for indexing in scatter
@@ -47,12 +56,14 @@ end
 local function test()
 	local nCorrect = 0
 	for i = 1, testset.size do
-		local _, l = torch.max(img2num.forward(testImgs[i]:double()),1)
+		-- Find the max along the column axis
+		local _, l = torch.max(img2num.forward(testImgs[i]:double()),2)
 		if l[1][1]-1 == testset.label[i] then
 			nCorrect = nCorrect+1
 		end
 	end
 	print(nCorrect, "/", testset.size)
+	return 1 - (nCorrect / testset.size)
 end
 
 local function saveNN()
@@ -71,23 +82,38 @@ end
 
 function img2num.train()
 	preprocess()
+	if load then
+		loadNN()
+	else if	useGPU then
+		trainWithGPU()
+	else
+		trainWithCPU()
+	end
+	if save then
+		saveNN()
+	end
+end
+
+function img2num.forward(img)
+	return net:forward(img:view(1,-1))
+end
+
+local function trainWithCPU()
 	-- 28x28 pixels for each image, 30 hidden neurons, onehot labels
-	local batchSize = 10
-	local maxEpoch = 50
-	local eta = 0.05
 	-- X is batch input, Y is batch target
 	local X = torch.Tensor(batchSize, 784)
 	local Y = torch.Tensor(batchSize, 10)
-	local lin1 = nn.Linear(784, 30)
-	local lin2 = nn.Linear(30, 10)
+	local lin1 = nn.Linear(784, nHidden)
+	local lin2 = nn.Linear(nHidden, 10)
 	local loss = nn.MSECriterion()
-	loss.sizeAverage = false
+	-- loss.sizeAverage = false
 	local sig = nn.Sigmoid()
 	-- Construct neural net
 	net = nn.Sequential()
 	net:add(lin1)
 	net:add(sig)
 	net:add(lin2)
+	print("Start training with CPU...")
 	for k = 1, maxEpoch do
 		-- Per epoch
 		print("Epoch", k)
@@ -97,8 +123,8 @@ function img2num.train()
 			-- Per batch
 			net:zeroGradParameters()
 			for j = 1, batchSize do
-				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):double() / 255.0
-				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):double()
+				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float() / 255.0
+				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float()
 			end
 			local pred = net:forward(X)
 			local err = loss:forward(pred, Y)
@@ -107,17 +133,61 @@ function img2num.train()
 			net:updateParameters(eta)
 		end
 		-- Check the results
-		test()
+		if test() < 0.05 then
+			print("Training finished at epoch", k)
+			break
+		end
 	end
 end
 
-function img2num.forward(img)
-	return net:forward(img:view(1,-1))
+local function trainWithGPU()
+	-- 28x28 pixels for each image, 30 hidden neurons, onehot labels
+	-- X is batch input, Y is batch target
+	local X = torch.Tensor(batchSize, 784):cuda()
+	local Y = torch.Tensor(batchSize, 10):cuda()
+	trainImgs:cuda()
+	trainLabels:cuda()
+	testImgs:cuda()
+	testLabels:cuda()
+	local lin1 = nn.Linear(784, nHidden)
+	local lin2 = nn.Linear(nHidden, 10)
+	local loss = nn.MSECriterion()
+	-- loss.sizeAverage = false
+	local sig = nn.Sigmoid()
+	-- Construct neural net
+	net = nn.Sequential()
+	net:add(lin1)
+	net:add(sig)
+	net:add(lin2)
+	net:cuda()
+	print("Start training with GPU...")
+	for k = 1, maxEpoch do
+		-- Per epoch
+		print("Epoch", k)
+		-- Shuffle the training set
+		local shuffle = torch.randperm(trainset.size):cuda()
+		for i = 1, trainset.size/batchSize do
+			-- Per batch
+			net:zeroGradParameters()
+			for j = 1, batchSize do
+				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float() / 255.0
+				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float()
+			end
+			local pred = net:forward(X)
+			local err = loss:forward(pred, Y)
+			local grad = loss:backward(pred, Y)
+			net:backward(X, grad)
+			net:updateParameters(eta)
+		end
+		-- Check the results
+		if test() < 0.05 then
+			print("Training finished at epoch", k)
+			break
+		end
+	end
 end
 
 local function debug()
-	-- loadNN()
-	-- test()
 	img2num.train()
 end
 
