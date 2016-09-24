@@ -14,13 +14,14 @@ local testImgs = testset.data
 local trainLabels
 local testLabels
 local net
+-- local times = {}
 
 -- Network parameters
 local batchSize = 10
 local maxEpoch = 50
-local eta = 0.05
+local eta = 0.1
 local nHidden = 30
-local useGPU = true
+local useGPU = false
 local save = false
 local load = false
 
@@ -64,38 +65,6 @@ local function test()
 	end
 	print(nCorrect, "/", testset.size)
 	return 1 - (nCorrect / testset.size)
-end
-
-local function saveNN()
-	local fname = 'trainedNetwork.asc'
-	local f = torch.DiskFile(fname, 'w')
-	f:writeObject(net)
-	f:close()
-end
-
-local function loadNN()
-	local fname = 'trainedNetwork.asc'
-	local f = torch.DiskFile(fname, 'r')
-	net = f:readObject()
-	f:close()	
-end
-
-function img2num.train()
-	preprocess()
-	if load then
-		loadNN()
-	else if	useGPU then
-		trainWithGPU()
-	else
-		trainWithCPU()
-	end
-	if save then
-		saveNN()
-	end
-end
-
-function img2num.forward(img)
-	return net:forward(img:view(1,-1))
 end
 
 local function trainWithCPU()
@@ -185,6 +154,39 @@ local function trainWithGPU()
 			break
 		end
 	end
+end
+
+local function saveNN()
+	local fname = 'trainedNetwork.asc'
+	local f = torch.DiskFile(fname, 'w')
+	f:writeObject(net)
+	f:close()
+end
+
+local function loadNN()
+	local fname = 'trainedNetwork.asc'
+	local f = torch.DiskFile(fname, 'r')
+	net = f:readObject()
+	f:close()	
+end
+
+function img2num.train()
+	preprocess()
+	if load then
+		loadNN()
+	elseif useGPU then
+		require 'cutorch'
+		trainWithGPU()
+	else
+		trainWithCPU()
+	end
+	if save then
+		saveNN()
+	end
+end
+
+function img2num.forward(img)
+	return net:forward(img:view(1,-1))
 end
 
 local function debug()
