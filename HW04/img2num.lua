@@ -21,9 +21,9 @@ local net
 local batchSize = 10
 local maxEpoch = 30
 local eta = 0.05
-local nHidden = 100
+local nHidden = 30
 local stopErr = 0.00
-local useGPU = true
+local useGPU = false
 local save = false
 local load = false
 
@@ -217,6 +217,6 @@ local function benchmark()
 	print('For each epoch, GPU took ', gpuTime/maxEpoch, 's.')
 end
 
-benchmark()
+-- benchmark()
 
 return img2num
