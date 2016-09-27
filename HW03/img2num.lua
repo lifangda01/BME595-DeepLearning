@@ -72,9 +72,9 @@ end
 function img2num.train()
 	preprocess()
 	-- 28x28 pixels for each image, 30 hidden neurons, onehot labels
-	NN.build({784, 100, 10})
+	NN.build({784, 30, 10})
 	local batchSize = 10
-	local maxEpoch = 50
+	local maxEpoch = 30
 	local eta = 0.05
 	-- X is batch input, Y is batch target
 	local X = torch.Tensor(batchSize, 784)
@@ -104,10 +104,11 @@ function img2num.forward(img)
 end
 
 local function debug()
-	loadNN()
-	test()
+	timer = torch.Timer()
+	img2num.train()
+	print('Training took ', timer:time().real, 's.')
 end
 
--- debug()
+debug()
 
 return img2num

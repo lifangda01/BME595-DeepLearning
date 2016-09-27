@@ -1,6 +1,8 @@
 require 'math'
 require 'torch'
 require 'nn'
+require 'cunn'
+require 'cutorch'
 
 local mnist = require 'mnist'
 
@@ -14,14 +16,14 @@ local testImgs = testset.data
 local trainLabels
 local testLabels
 local net
--- local times = {}
 
 -- Network parameters
 local batchSize = 10
-local maxEpoch = 50
-local eta = 0.1
-local nHidden = 30
-local useGPU = false
+local maxEpoch = 30
+local eta = 0.05
+local nHidden = 100
+local stopErr = 0.00
+local useGPU = true
 local save = false
 local load = false
 
@@ -54,12 +56,25 @@ local function preprocess()
 	print("Preprocessing finished...")
 end
 
-local function test()
+local function testWithCPU()
 	local nCorrect = 0
 	for i = 1, testset.size do
 		-- Find the max along the column axis
 		local _, l = torch.max(img2num.forward(testImgs[i]:double()),2)
 		if l[1][1]-1 == testset.label[i] then
+			nCorrect = nCorrect+1
+		end
+	end
+	print(nCorrect, "/", testset.size)
+	return 1 - (nCorrect / testset.size)
+end
+
+local function testWithGPU()
+	local nCorrect = 0
+	for i = 1, testset.size do
+		-- Find the max along the column axis
+		local _, l = torch.max(img2num.forward(testImgs[i]),2)
+		if l[1][1]-1 == testLabels[i] then
 			nCorrect = nCorrect+1
 		end
 	end
@@ -102,7 +117,7 @@ local function trainWithCPU()
 			net:updateParameters(eta)
 		end
 		-- Check the results
-		if test() < 0.05 then
+		if testWithCPU() < stopErr then
 			print("Training finished at epoch", k)
 			break
 		end
@@ -112,15 +127,15 @@ end
 local function trainWithGPU()
 	-- 28x28 pixels for each image, 30 hidden neurons, onehot labels
 	-- X is batch input, Y is batch target
-	local X = torch.Tensor(batchSize, 784):cuda()
-	local Y = torch.Tensor(batchSize, 10):cuda()
-	trainImgs:cuda()
-	trainLabels:cuda()
-	testImgs:cuda()
-	testLabels:cuda()
+	local X = torch.FloatTensor(batchSize, 784):cuda()
+	local Y = torch.FloatTensor(batchSize, 10):cuda()
+	trainImgs = trainImgs:float():cuda()
+	trainLabels = trainLabels:float():cuda()
+	testImgs = testImgs:float():cuda()
+	testLabels = testset.label:cuda()
 	local lin1 = nn.Linear(784, nHidden)
 	local lin2 = nn.Linear(nHidden, 10)
-	local loss = nn.MSECriterion()
+	local loss = nn.MSECriterion():cuda()
 	-- loss.sizeAverage = false
 	local sig = nn.Sigmoid()
 	-- Construct neural net
@@ -128,7 +143,7 @@ local function trainWithGPU()
 	net:add(lin1)
 	net:add(sig)
 	net:add(lin2)
-	net:cuda()
+	net = net:cuda()
 	print("Start training with GPU...")
 	for k = 1, maxEpoch do
 		-- Per epoch
@@ -139,8 +154,8 @@ local function trainWithGPU()
 			-- Per batch
 			net:zeroGradParameters()
 			for j = 1, batchSize do
-				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float() / 255.0
-				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1):float()
+				X[j] = trainImgs[shuffle[ (i-1)*batchSize+j ]]:view(1,-1) / 255.0
+				Y[j] = trainLabels[shuffle[ (i-1)*batchSize+j ]]:view(1,-1)
 			end
 			local pred = net:forward(X)
 			local err = loss:forward(pred, Y)
@@ -149,11 +164,12 @@ local function trainWithGPU()
 			net:updateParameters(eta)
 		end
 		-- Check the results
-		if test() < 0.05 then
+		if testWithGPU() < stopErr then
 			print("Training finished at epoch", k)
 			break
 		end
 	end
+	cutorch.synchronize()
 end
 
 local function saveNN()
@@ -175,7 +191,6 @@ function img2num.train()
 	if load then
 		loadNN()
 	elseif useGPU then
-		require 'cutorch'
 		trainWithGPU()
 	else
 		trainWithCPU()
@@ -189,10 +204,19 @@ function img2num.forward(img)
 	return net:forward(img:view(1,-1))
 end
 
-local function debug()
-	img2num.train()
+local function benchmark()
+	-- Average time for one epoch
+	preprocess()
+	local timer = torch.Timer()
+	trainWithCPU()
+	local cpuTime = timer:time().real
+	print('For each epoch, CPU took ', cpuTime/maxEpoch, 's.')
+	local timer = torch.Timer()
+	trainWithGPU()
+	local gpuTime = timer:time().real
+	print('For each epoch, GPU took ', gpuTime/maxEpoch, 's.')
 end
 
-debug()
+benchmark()
 
 return img2num
