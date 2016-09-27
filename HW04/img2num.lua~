@@ -217,6 +217,6 @@ local function benchmark()
 	print('For each epoch, GPU took ', gpuTime/maxEpoch, 's.')
 end
 
-benchmark()
+-- benchmark()
 
 return img2num
