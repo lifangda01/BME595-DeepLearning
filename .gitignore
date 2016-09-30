@@ -45,3 +45,8 @@ luac.out
 
 # Project specific
 *.asc
+*~
+*.swp
+
+
+
