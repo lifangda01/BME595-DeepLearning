@@ -72,23 +72,46 @@ local function trainWithCPU()
 	net:add(nn.Linear(120,84))
 	net:add(nn.Tanh())
 	net:add(nn.Linear(84, 10))
+
+	-- optim stuff
+	local optim = require 'optim'
+	local theta, gradTheta = net:getParameters()
+	local optimState = {learningRate = 0.1}
+
 	print("Start training with CPU...")
 	for k = 1, maxEpoch do
 		-- Per epoch
 		print("Epoch", k)
+
 		-- Shuffle the training set
+		-- local shuffle = torch.randperm(trainset.size)
+		-- for i = 1, trainset.size do
+		-- 	-- Per batch
+		-- 	net:zeroGradParameters()
+			-- X[1] = trainImgs[shuffle[ i ]] / 255.0
+			-- Y = trainLabels[shuffle[ i ]]:view(1,-1)
+		-- 	local pred = net:forward(X)
+		-- 	local err = loss:forward(pred, Y)
+		-- 	local grad = loss:backward(pred, Y)
+		-- 	net:backward(X, grad)
+		-- 	net:updateParameters(eta)
+		-- end
+
 		local shuffle = torch.randperm(trainset.size)
 		for i = 1, trainset.size do
-			-- Per batch
-			net:zeroGradParameters()
 			X[1] = trainImgs[shuffle[ i ]] / 255.0
 			Y = trainLabels[shuffle[ i ]]:view(1,-1)
-			local pred = net:forward(X)
-			local err = loss:forward(pred, Y)
-			local grad = loss:backward(pred, Y)
-			net:backward(X, grad)
-			net:updateParameters(eta)
+			local function feval(theta)
+				gradTheta:zero()
+				local hx = net:forward(X)
+				local J = loss:forward(hx, Y)
+				local dJ_dhx = loss:backward(hx, Y)
+				net:backward(X, dJ_dhx)
+				return J, gradTheta
+			end
+			optim.sgd(feval, theta, optimState)
 		end
+
 		-- Check the results
 		if testWithCPU() < stopErr then
 			print("Training finished at epoch", k)
