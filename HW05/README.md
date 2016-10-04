@@ -19,15 +19,18 @@ The training time is significantly greater than `MNIST`, with each epoch of trai
 For the `cifar-100` dataset, my LeNet-5 can only achieve an accuracy of 23.73%. The conclusion is that LeNet-5 is too simple for classifying a 100-class dataset. 
 # Visualization
 With my `cifar-10` network, I was able to classify objects based on my continuous camera feed. Here is a frame from my webcam of me holding a picture of an airplane, with its prediction on the top left (note that the number label for planes is 0 in `cifar-10`).
-![alt text][time]
-[time]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/vis.png "Webcam feed"
+
+![alt text][webcam]
+[webcam]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/vis.png "Webcam feed"
 
 Here I also show two correct classification results for images in the test set:
-![alt text][time]
-[time]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/cat.png "Cat"
-![alt text][time]
-[time]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/ship.png "Ship"
+
+![alt text][cat]
+[cat]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/cat.png "Cat"
+![alt text][ship]
+[ship]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/ship.png "Ship"
 
 Here is an misclassified image, where a plane is misclassified as an automobile:
-![alt text][time]
-[time]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/wrong.png "Plane"
+
+![alt text][plane]
+[plane]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/HW05/wrong.png "Plane"
