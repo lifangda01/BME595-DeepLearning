@@ -35,17 +35,15 @@ local function preprocess()
 	table.insert(oneHotLabels, oneHot(testset.label))
 	trainLabels = oneHotLabels[1]
 	testLabels = oneHotLabels[2]
+	trainImgs = trainImgs:float() / 255.0
 	print("Preprocessing finished...")
 end
 
-local function testWithCPU()
+local function test()
 	local nCorrect = 0
-	local X = torch.Tensor(1,28,28)
 	for i = 1, testset.size do
-		-- Find the max along the column axis
-		X[1] = testImgs[i]
-		local _,l = torch.max(img2num.forward(X / 255.0), 1)
-		if l[1]-1 == testset.label[i] then
+		local l = img2num.forward(testImgs[i])
+		if l-1 == testset.label[i] then
 			nCorrect = nCorrect+1
 		end
 	end
@@ -53,10 +51,10 @@ local function testWithCPU()
 	return 1 - (nCorrect / testset.size)
 end
 
-local function trainWithCPU()
+local function train()
 	-- X is batch input, Y is batch target
-	local X = torch.Tensor(1, 28, 28)
-	local Y = torch.Tensor(10)
+	local X = torch.Tensor(batchSize, 1, 28, 28)
+	local Y = torch.Tensor(batchSize, 10)
 	local loss = nn.MSECriterion()
 	-- Construct LeNet5
 	net = nn.Sequential()
@@ -76,31 +74,22 @@ local function trainWithCPU()
 	-- optim stuff
 	local optim = require 'optim'
 	local theta, gradTheta = net:getParameters()
-	local optimState = {learningRate = 0.1}
+	local optimState = {learningRate = 0.01}
+
+	-- if useGPU then
+	-- 	trainImgs:cuda()
 
 	print("Start training with CPU...")
 	for k = 1, maxEpoch do
 		-- Per epoch
 		print("Epoch", k)
 
-		-- Shuffle the training set
-		-- local shuffle = torch.randperm(trainset.size)
-		-- for i = 1, trainset.size do
-		-- 	-- Per batch
-		-- 	net:zeroGradParameters()
-			-- X[1] = trainImgs[shuffle[ i ]] / 255.0
-			-- Y = trainLabels[shuffle[ i ]]:view(1,-1)
-		-- 	local pred = net:forward(X)
-		-- 	local err = loss:forward(pred, Y)
-		-- 	local grad = loss:backward(pred, Y)
-		-- 	net:backward(X, grad)
-		-- 	net:updateParameters(eta)
-		-- end
-
 		local shuffle = torch.randperm(trainset.size)
-		for i = 1, trainset.size do
-			X[1] = trainImgs[shuffle[ i ]] / 255.0
-			Y = trainLabels[shuffle[ i ]]:view(1,-1)
+		for i = 1, trainset.size/batchSize do
+			for j=1,batchSize do
+				X[{j,1}] = trainImgs[shuffle[ i ]]
+				Y[j] = trainLabels[shuffle[ i ]]:view(1,-1)
+			end
 			local function feval(theta)
 				gradTheta:zero()
 				local hx = net:forward(X)
@@ -112,33 +101,39 @@ local function trainWithCPU()
 			optim.sgd(feval, theta, optimState)
 		end
 
+		-- local timer = torch.Timer()
 		-- Check the results
-		if testWithCPU() < stopErr then
+		if test() < stopErr then
 			print("Training finished at epoch", k)
 			break
 		end
+		-- print("Inference time: ", timer:time().real)
 	end
 end
 
 function img2num.train()
 	preprocess()
-	trainWithCPU()
+	train()
 end
 
 function img2num.forward(img)
-	return net:forward(img)
+	img = img:float() / 255.0
+	local X = torch.Tensor(1,1,28,28)
+	X[{1,1}] = img
+	local _,l = torch.max(net:forward(X), 1)
+	return math.floor(l[1])
 end
 
 local function benchmark()
 	-- Average time for one epoch
 	preprocess()
 	local timer = torch.Timer()
-	trainWithCPU()
-	local cpuTime = timer:time().real
-	print('For each epoch, CPU took ', cpuTime/maxEpoch, 's.')
+	train()
+	local time = timer:time().real
+	print('For each epoch, CPU took ', time/maxEpoch, 's.')
 	local timer = torch.Timer()
 end
 
-benchmark()
+-- benchmark()
 
 return img2num
