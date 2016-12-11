@@ -37,10 +37,11 @@ In order to address all the aforementioned issues, we developed the following pi
 
 4. As a result, we take advantage of standard morphological operations on the foreground mask. More specifically, we erode the mask first with a 15 by 15 kernel followed by 7 by 7 dilation to suppress noise in the mask as well as shrink the foreground region. Consequently, more boundary regions are discarded and number of background images in the dataset is reduced. Below is a figure demonstrating foreground mask.
 
-	![alt text][fmask]
-	[fmask]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/fmask.png "fmask"
-
 5. Finally, for each WSI, we iterate the whole image in raster order to extract foreground patches while looking up in the tumor mask image for its ground-truth label. Patches are discarded randomly in order to make the final dataset size reasonable.
+
+![alt text][fmask]
+[fmask]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/fmask.png "fmask"
+
 
 ### Training and Evaluating the Neural Network
 In this subsection, methods and issues relevant to the training and evaluation of our neural network based classifier (``train.lua``) are described.
