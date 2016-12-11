@@ -1,6 +1,6 @@
 # Metastatic Breast Cancer Detection Using CNN
 ## Introduction
-Breast cancer has been one of the deadliest and most frequent cancer type. Moreover, its diagnosis heavily relies on visual inspection of whole-slides by physicians. Aiming to reduce the manual labor, in this work, we implemented a deep learning frame work that preprocesses raw gigabyte-sized whole-slide images and automatically detects cancerous regions using ResNet. Then, we show the practical effectiveness of our framework by ROC plots. Finally, we compare the performances of two different CNN models on two datasets with different sizes. Below is a figure demonstrating the visual difference between normal and metastatic regions
+Breast cancer has been one of the deadliest and most frequent cancer type. Moreover, its diagnosis heavily relies on visual inspection of whole-slides by physicians. Aiming to reduce the manual labor, in this work, we implemented a deep learning frame work that preprocesses raw gigabyte-sized whole-slide images and automatically detects cancerous regions using ResNet. Then, we show the practical effectiveness of our framework by ROC plots. Finally, we compare the performances of two different CNN models on two datasets with different sizes. Below is a figure demonstrating the visual difference between normal and metastatic regions obtained from [1].
 
 ![alt text][overview]
 [overview]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/overview.png "Overview"
@@ -58,12 +58,14 @@ In this section, the effectiveness of our framework is demonstrated using two mo
 First, on the smaller dataset, where 18k patches (10k normal and 8k tumor) are used for training and 5k patches are used for testing, the Receiver Operating Characteristics (ROC) curve is shown below.
 
 ![alt text][ROC-small]
-[ROC-small]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-small.svg "ROC-small"
+[ROC-small]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-small.png "ROC-small"
 
 Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used for training and 12k patches are used for testing, the ROC is shown below.
 
 ![alt text][ROC-full]
-[ROC-full]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-full.svg "ROC-full"
+[ROC-full]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-full.png "ROC-full"
+
+
 
 ## References
 [1] https://camelyon16.grand-challenge.org
