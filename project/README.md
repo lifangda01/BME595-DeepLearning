@@ -6,23 +6,31 @@ The same problem of metastatic breast cancer has been previously organized as CA
 ### FIXME: pic of their results
 ## Our Approach
 In this section, the methods used in our attempt of automatic cancer detection are described. On the other hand, the challenges we faced in our development are also discussed. Intuitively, the project can be broken down into two major stages: dataset generation and neural network training.
-### Dataset Generation
-In this subsection, the issues and methods in generating the training dataset are described. The 270 RGB WSIs and their corresponding binary masks are given in ``.tif`` format. Normally, each WSI is of size 1-3GB when compressed with 130k x 80k pixels and each binary mask is around 50MB. Note that the extremely large size of each WSI proposes significant constraints on our preprocessing, since loading a fully uncompressed WSI into RAM is practically impossible. For the smallest WSI (521MB) we have, it is observed that loading it into RAM takes more than 90% available space and makes the operating system notably inresponsible. 
+### Generating the Dataset 
+In this subsection, the issues and methods in generating the training dataset are described. 
+The 270 RGB WSIs and their corresponding binary masks are given in ``.tif`` format. Normally, each WSI is of size 1-3GB when compressed with 130k x 80k pixels and each binary mask is around 50MB. Note that the extremely large size of each WSI proposes significant constraints on our preprocessing, since loading a fully uncompressed WSI into RAM is practically impossible. For the smallest WSI (521MB) we have, it is observed that loading it into RAM takes more than 90% available space and makes the operating system notably inresponsible. 
 Another issue caused by the scale of the WSI is disk usage. Assume the average size of WSI is 1.5GB, even 10 WSIs alone can easily take up ``10 * 1.5GB = 15GB`` disk space, not to mention the disk space taken by the generated dataset. As a result, downloading everything we need at once to disk is impractical given the hardware we have.
 In order to address all the aforementioned issues, we developped the following pipeline:
 1. Since the entire set of WSI is given to us via Google Drive, Google Drive API (``googledrive.py``) is used in our preprocessing script (``preprocess.py``) to download WSI individually and erase the raw WSI after its patches have been extracted if necessary. 
 2. Given the large size of each WSI, using Geospatial Data Abstraction Library (GDAL) gives us the freedom to read image ROI without loading the entire WSI into memory. GDAL also provides easy interface to extract different levels of overview of WSIs, which becomes very useful in the foreground segmentation process described in the next step.
 3. For each WSI, we use an overview (roughly 3k x 3k pixels) of the original WSI to calculate the foreground mask. Similar to the approach in [2], Otsu's algorithm is used after converting the overview to HSV colorspace. Note that due to the dramatic difference in size between original WSI and its foreground mask, looking up the foreground mask by quantizing coordinates in WSI introduces noticeably quantization error. The consequence of this error is especially visible on the boundaries of the foreground regions, where backgrounds are mistakenly treated like foreground.
 4. As a result, we take advantage of standard morphological operations on the foreground mask. More specifically, we erode the mask first with a 31 by 31 kernel followed by 7 by 7 dialtion to suppress noise in the mask as well as shrink the foreground region. Consequently, more boundary regions are discarded and number of background images in the dataset are reduced.
-5. Finally, for each WSI, we iterate the whole image in raster order to extract foreground patches while looking up in the tumor mask image for its ground-truth label.
+5. Finally, for each WSI, we iterate the whole image in raster order to extract foreground patches while looking up in the tumor mask image for its ground-truth label. Patches are discarded randomly in order to make the final dataset size reasonable.
 ##### FIXME add otsu mask figures
-### Neural Network Training
-In this subsection, 
-
+### Training and Evaluating the Neural Network
+In this subsection, methods and issues relavent to the training and evaluation of our neural network based classifier (``train.lua``) are described.
+The 25% of the generated patches are used in testing while the rest are used for training. Before feeding the network, the patches are normalized to be zero-mean and unit-variance.
+The network model of choice in our framework is ResNet [3]. Since we want the final output of the network to be the probablility of the input patch containing cancer cells, a *Softmax* layer is appended in the end and *Negative Log Likelihood* is used as the loss function. 
+The biggest issue we ran into while training the network is concerned with local minima. When we train a randomly initiated network on our generated dataset, the network tends to classifiy every patch into only one category, either tumor or normal. Several epochs later, the network is still stuck with its monotonous behavior. We first eliminated the possibility of overfitting, since the accuracy of classifying everything into one single catagory is only about 60%. Then, it is observed that there is a significant loss reduction between making random predictions and making monotonous predictions. As a result, we hypothesize the network is stuck in a very steep local minima.
+In order to resolve the local minima issue, transfer learning is used. Instead of giving the network totally random weights initially. We use ImageNet pre-trained ResNet model obtained from [4] to keep the initial location of the network on the error surface away from the local minima. In the mean time, transfer learning also speeds up the convergence since the pre-trained network is already an expert in feature extraction. To implement transfer learning, we simply strip away the last 1000-node classification layer and replace it with our own *Softmax* layer.  
 ## Results and Discussion
-
-## Individual Contribution
+In this section, the effectiveness of our framework is demonstrated using two models and two datasets. Note that all the experiments are carried out on Intel i7-4790k processor with 16GB RAM and Nvidia GeForce 980 Ti GPU with 2GB RAM.
+First, on the smaller dataset, where 18k patches (10k normal and 8k tumor) are used for training and 5k patches are used for testing, the Receiver Operating Characteristics (ROC) curve is shown below
+#### Add ROC
+Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used for training and 12k patches are used for testing, the ROC is shown below
 
 ## References
 [1] https://camelyon16.grand-challenge.org
 [2] https://arxiv.org/pdf/1606.05718v1.pdf
+[3] https://arxiv.org/pdf/1512.03385v1.pdf
+[4] https://github.com/facebook/fb.resnet.torch/tree/master/pretrained
