@@ -52,6 +52,7 @@ The network model of choice in our framework is ResNet [3]. Since we want the fi
 The biggest issue we ran into while training the network is concerned with local minima. When we train a randomly initiated network on our generated dataset, the network tends to classify every patch into only one category, either tumor or normal. Several epochs later, the network is still stuck with its monotonous behavior. We first eliminated the possibility of overfitting, since the accuracy of classifying everything into one single category is only about 60%. Then, it is observed that there is a significant loss reduction between making random predictions and making monotonous predictions. As a result, we hypothesize the network is stuck in a very steep local minima.
 
 In order to resolve the local minima issue, transfer learning is used. Instead of giving the network totally random weights initially. We use ImageNet pre-trained ResNet model obtained from [4] to keep the initial location of the network on the error surface away from the local minima. In the mean time, transfer learning also speeds up the convergence since the pre-trained network is already an expert in feature extraction. To implement transfer learning, we simply strip away the last 1000-node classification layer and replace it with our own *Softmax* layer.  
+
 ## Results and Discussion
 In this section, the effectiveness of our framework is demonstrated using two models and two datasets. Note that all the experiments are carried out on Intel i7-4790k processor with 16GB RAM and Nvidia GeForce 980 Ti GPU with 2GB RAM.
 
@@ -65,7 +66,19 @@ Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used
 ![alt text][ROC-full]
 [ROC-full]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-full.png "ROC-full"
 
+The best overall best accuracy is reported in the table below.
 
+|           | Small dataset | Full dataset |
+|:---------:|:-------------:|:------------:|
+|  ResNet18 |     92.42%    |    82.41%    |
+| ResNet101 |     98.22%    |    96.73%    |
+
+It can be observed that the deeper network (ResNet101) significantly outperforms ResNet18 on both datasets. On the full dataset, the model of ResNet18 is too simple to keep itself on par with the variations in the dataset. On the other hand, ResNet101 achieved similar patch accuracy (96.73%) compared to the results reported in [2].
+
+Overall, our framework has demonstrated its predictive ability at low false positive rate. Especially on the full dataset, ResNet101 has a FPR of 1% while the TPR is greater than 90%. 
+
+## Conclusion
+In this project, we developed a deep learning framework that preprocesses raw whole-slide images, carries out training on the generated patches and achieves high patch classification accuracy. Future work includes using a dataset that is much larger scale (utilizing all 270 training and 130 testing WSIs) and experimenting with other different neural network models. 
 
 ## References
 [1] https://camelyon16.grand-challenge.org
