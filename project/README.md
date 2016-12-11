@@ -6,7 +6,7 @@ Breast cancer has been one of the deadliest and most frequent cancer type. Moreo
 [overview]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/overview.png "Overview"
 
 ## Related Work
-The same problem of metastatic breast cancer has been previously organized as CAMELYON 2016 Grand Challenge [1]. The entire dataset consist of 270 whole-slide images (WSIs) available for training. For each image, its binary mask of cancer region is also given. The best detection framework submitted to the challenge came from a joint team between MIT and Harvard. Patch accuracy of 98.4% using GoogLeNet has been reported in their paper, *Deep Learning for Identifying Metastatic Breast Cancer* [2]. Here is a table of the patch accuracy using different network models as reported in their paper.
+The same problem of metastatic breast cancer has been previously organized as CAMELYON 2016 Grand Challenge [1]. The entire dataset consists of 270 whole-slide images (WSIs) available for training. For each image, its binary mask of cancer region is also given. The best detection framework submitted to the challenge came from a joint team between MIT and Harvard. Patch accuracy of 98.4% using GoogLeNet has been reported in their paper, *Deep Learning for Identifying Metastatic Breast Cancer* [2]. Here is a table of the patch accuracy using different network models as reported in their paper.
 
 ![alt text][paper_result]
 [paper_result]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/paper.png "Paper result"
@@ -14,7 +14,7 @@ The same problem of metastatic breast cancer has been previously organized as CA
 In their approach, they first segment out the foreground region (region with cells) from the background in the whole slide images. Then, they randomly extract millions of small patches (256 x 256) from the segmented foreground to train the neural network. Notably, they further enhance their network by feeding more *hard negative* samples, where those samples are extracted from histologic mimics of cancer. Next, the patch-based accuracy is computed. Furthermore, the framework is also evaluated on two more metrics: slide-based classification and lesion-based detection.       
 
 ## Our Approach
-In this section, the methods used in our attempt of automatic cancer detection are described. On the other hand, the challenges we faced in our development are also discussed. Intuitively, the project can be broken down into two major stages: dataset generation and neural network training.
+In this section, the methods used in our attempt of automatic cancer detection are described. Moreover, the challenges we faced in our development are also discussed. Intuitively, the project can be broken down into two major stages: dataset generation and neural network training.
 ### Generating the Dataset 
 In this subsection, the issues and methods in generating the training dataset are described. 
 
@@ -23,29 +23,29 @@ The 270 RGB WSIs and their corresponding binary masks are given in ``.tif`` form
 ![alt text][tmask]
 [tmask]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/tmask.png "tmask"
 
-Note that the extremely large size of each WSI proposes significant constraints on our preprocessing, since loading a fully uncompressed WSI into RAM is practically impossible. For the smallest WSI (521MB) we have, it is observed that loading it into RAM takes more than 90% available space and makes the operating system notably irresponsible. 
+Note that the extremely large size of each WSI proposes significant constraints on our preprocessing, since loading a fully uncompressed WSI into RAM is practically impossible. For the smallest WSI (521MB) we have, it is observed that loading it into RAM takes more than 90% available space and makes the operating system significantly irresponsible. 
 
 Another issue caused by the scale of the WSI is disk usage. Assume the average size of WSI is 1.5GB, even 10 WSIs alone can easily take up ``10 * 1.5GB = 15GB`` disk space, not to mention the disk space taken by the generated dataset. As a result, downloading everything we need at once to disk is impractical given the hardware we have.
 
 In order to address all the aforementioned issues, we developed the following pipeline:
 
-1. Since the entire set of WSI is given to us via Google Drive, Google Drive API (``googledrive.py``) is used in our preprocessing script (``preprocess.py``) to download WSI individually and erase the raw WSI after its patches have been extracted if necessary. 
+1. Since the entire set of WSI is given to us via Google Drive, Google Drive API (``googledrive.py``) is used in our preprocessing script (``preprocess.py``) to download WSI individually and erase the raw WSI after its patches have been extracted if necessary in order to save disk space. 
 
 2. Given the large size of each WSI, using Geospatial Data Abstraction Library (GDAL) gives us the freedom to read image ROI without loading the entire WSI into memory. GDAL also provides easy interface to extract different levels of overview of WSIs, which becomes very useful in the foreground segmentation process described in the next step.
 
-3. For each WSI, we use an overview (roughly 3k x 3k pixels) of the original WSI to calculate the foreground mask. Similar to the approach in [2], Otsu's algorithm is used after converting the overview to HSV colorspace. Note that due to the dramatic difference in size between original WSI and its foreground mask, looking up the foreground mask by quantizing coordinates in WSI introduces noticeably quantization error. The consequence of this error is especially visible on the boundaries of the foreground regions, where backgrounds are mistakenly treated like foreground. 
+3. For each WSI, we use an overview (roughly 3k x 3k pixels) of the original WSI to calculate the foreground mask. Similar to the approach in [2], Otsu's algorithm is used after converting the overview to HSV colorspace. Note that due to the dramatic difference in size between original WSI and its foreground mask, looking up the foreground mask by quantizing coordinates in WSI introduces noticeable quantization error. The consequence of this error is especially visible on the boundaries of the foreground regions, where backgrounds are mistakenly treated like foreground. 
 
-4. As a result, we take advantage of standard morphological operations on the foreground mask. More specifically, we erode the mask first with a 15 by 15 kernel followed by 7 by 7 dilation to suppress noise in the mask as well as shrink the foreground region. Consequently, more boundary regions are discarded and number of background images in the dataset are reduced. Below is a figure of the foreground mask.
+4. As a result, we take advantage of standard morphological operations on the foreground mask. More specifically, we erode the mask first with a 15 by 15 kernel followed by 7 by 7 dilation to suppress noise in the mask as well as shrink the foreground region. Consequently, more boundary regions are discarded and number of background images in the dataset is reduced. Below is a figure demonstrating foreground mask.
 
-![alt text][fmask]
-[fmask]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/fmask.png "fmask"
+	![alt text][fmask]
+	[fmask]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/fmask.png "fmask"
 
 5. Finally, for each WSI, we iterate the whole image in raster order to extract foreground patches while looking up in the tumor mask image for its ground-truth label. Patches are discarded randomly in order to make the final dataset size reasonable.
 
 ### Training and Evaluating the Neural Network
 In this subsection, methods and issues relevant to the training and evaluation of our neural network based classifier (``train.lua``) are described.
 
-The 25% of the generated patches are used in testing while the rest are used for training. Before feeding the network, the patches are normalized to be zero-mean and unit-variance.
+25% of the generated patches are used in testing while the rest are used for training. Before feeding the network, the patches are normalized to be zero-mean and unit-variance.
 
 The network model of choice in our framework is ResNet [3]. Since we want the final output of the network to be the probability of the input patch containing cancer cells, a *Softmax* layer is appended in the end and *Negative Log Likelihood* is used as the loss function.
 
@@ -66,7 +66,7 @@ Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used
 ![alt text][ROC-full]
 [ROC-full]: https://github.com/lifangda01/BME595-DeepLearning/blob/master/project/figures/ROC-full.png "ROC-full"
 
-The best overall best accuracy is reported in the table below.
+The overall best accuracy is reported in the table below.
 
 |           | Small dataset | Full dataset |
 |:---------:|:-------------:|:------------:|
