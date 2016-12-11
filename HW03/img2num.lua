@@ -100,7 +100,7 @@ function img2num.train()
 end
 
 function img2num.forward(img)
-	return NN.forward(img:view(-1,1))
+	return NN.forward(img:view(-1,1):255.0)
 end
 
 local function debug()

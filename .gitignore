@@ -47,6 +47,6 @@ luac.out
 *.asc
 *~
 *.swp
-
+*.t7
 
 

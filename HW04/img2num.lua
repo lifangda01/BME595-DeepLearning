@@ -114,11 +114,13 @@ local function trainWithCPU()
 			net:backward(X, grad)
 			net:updateParameters(eta)
 		end
+		local timer = torch.Timer()
 		-- Check the results
 		if testWithCPU() < stopErr then
 			print("Training finished at epoch", k)
 			break
 		end
+		print("Inference time: ", timer:time().real)
 	end
 end
 
@@ -161,11 +163,13 @@ local function trainWithGPU()
 			net:backward(X, grad)
 			net:updateParameters(eta)
 		end
+		-- local timer = torch.Timer()
 		-- Check the results
 		if testWithGPU() < stopErr then
 			print("Training finished at epoch", k)
 			break
 		end
+		-- print("Inference time: ", timer:time().real)
 	end
 	cutorch.synchronize()
 end
@@ -201,7 +205,7 @@ function img2num.train()
 end
 
 function img2num.forward(img)
-	return net:forward(img:view(1,-1))
+	return net:forward(img:view(1,-1) / 255.0)
 end
 
 local function benchmark()
@@ -217,6 +221,6 @@ local function benchmark()
 	print('For each epoch, GPU took ', gpuTime/maxEpoch, 's.')
 end
 
-benchmark()
+-- benchmark()
 
 return img2num
