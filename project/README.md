@@ -60,12 +60,12 @@ In this section, the effectiveness of our framework is demonstrated using two mo
 First, on the smaller dataset, where 18k patches (10k normal and 8k tumor) are used for training and 5k patches are used for testing, the Receiver Operating Characteristics (ROC) curve is shown below.
 
 ![alt text][ROC-small]
-[ROC-small]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-small.png"ROC-small"
+[ROC-small]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-small.png "ROC-small"
 
 Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used for training and 12k patches are used for testing, the ROC is shown below.
 
 ![alt text][ROC-full]
-[ROC-full]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-full.png"ROC-full"
+[ROC-full]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-full.png "ROC-full"
 
 The overall best accuracy is reported in the table below.
 
