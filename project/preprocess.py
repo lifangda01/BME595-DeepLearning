@@ -96,9 +96,6 @@ def generate_patches_with_label(dataset_path, slideGdal, tmaskGdal, title, patch
     # Size ratio of original slide over mask
     ratio = float(width) / tmWidth
     count = 0
-    # figure()
-    # imshow(overlay_mask_on_slide(slide, fmask))
-    # show()
     print "Total number of possible patches...", width*height / patchSize**2
     # Iterate through all the patches
     for x in range(0, width-patchSize, patchSize):
@@ -128,7 +125,6 @@ def generate_patches_with_label(dataset_path, slideGdal, tmaskGdal, title, patch
                 else:
                     imsave(dataset_path + "/train/normal/" + "_".join([title, str(count), str(label)]) + ".png", patch)
             except IndexError:
-                # print "ERROR: index error encountered... continuing"
                 pass
 
 def generate_training_dataset(dataset_path, patchSize=224, numSkip=10):
@@ -186,17 +182,15 @@ def dataset_split(dataset_path, split_path, ratio):
     random.shuffle(normal_indices)
     normal_test_indices = normal_indices[:num_test_normal]
     for f in tumor_file_list[tumor_test_indices]:
-        # print os.path.join(dataset_path, 'tumor',f) + " TO " + os.path.join('./images/test', 'tumor',f)
         os.rename(os.path.join(dataset_path, 'tumor',f), os.path.join(split_path, 'tumor',f))
     for f in normal_file_list[normal_test_indices]:
-        # print os.path.join(dataset_path, 'normal',f) + " TO " + os.path.join('./images/test', 'normal',f)
         os.rename(os.path.join(dataset_path, 'normal',f), os.path.join(split_path, 'normal',f))
 
 
 # Use gdalinfo for readable information about image    
 # imshow displays RGB image (not BGR)    
 def main():
-    # generate_training_dataset('./images1', patchSize=224, numSkip=10)
+    generate_training_dataset('./images1', patchSize=224, numSkip=10)
 
 if __name__ == "__main__":
     main()
