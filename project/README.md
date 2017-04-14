@@ -7,8 +7,7 @@ Breast cancer has been one of the deadliest and most frequent cancer type. Moreo
 ## Related Work
 The same problem of metastatic breast cancer has been previously organized as CAMELYON 2016 Grand Challenge [1]. The entire dataset consists of 270 whole-slide images (WSIs) available for training. For each image, its binary mask of cancer region is also given. The best detection framework submitted to the challenge came from a joint team between MIT and Harvard. Patch accuracy of 98.4% using GoogLeNet has been reported in their paper, *Deep Learning for Identifying Metastatic Breast Cancer* [2]. Here is a table of the patch accuracy using different network models as reported in their paper.
 
-![alt text][paper_result]
-[paper_result]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/paper.png "Paper result"
+![paper_result](./figures/paper.png)
 
 In their approach, they first segment out the foreground region (region with cells) from the background in the whole slide images. Then, they randomly extract millions of small patches (256 x 256) from the segmented foreground to train the neural network. Notably, they further enhance their network by feeding more *hard negative* samples, where those samples are extracted from histologic mimics of cancer. Next, the patch-based accuracy is computed. Furthermore, the framework is also evaluated on two more metrics: slide-based classification and lesion-based detection.       
 
@@ -19,8 +18,7 @@ In this subsection, the issues and methods in generating the training dataset ar
 
 The 270 RGB WSIs and their corresponding binary masks are given in ``.tif`` format. Normally, each WSI is of size 1-3GB when compressed with 130k x 80k pixels and each binary mask is around 50MB. Below is a figure of the tumor mask.
 
-![alt text][tmask]
-[tmask]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/tmask.png "tmask"
+![tmask](./figures/tmask.png)
 
 Note that the extremely large size of each WSI proposes significant constraints on our preprocessing, since loading a fully uncompressed WSI into RAM is practically impossible. For the smallest WSI (521MB) we have, it is observed that loading it into RAM takes more than 90% available space and makes the operating system significantly irresponsible. 
 
@@ -38,9 +36,7 @@ In order to address all the aforementioned issues, we developed the following pi
 
 5. Finally, for each WSI, we iterate the whole image in raster order to extract foreground patches while looking up in the tumor mask image for its ground-truth label. Patches are discarded randomly in order to make the final dataset size reasonable.
 
-![alt text][fmask]
-[fmask]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/fmask.png "fmask"
-
+![fmask](./figures/fmask.png)
 
 ### Training and Evaluating the Neural Network
 In this subsection, methods and issues relevant to the training and evaluation of our neural network based classifier (``train.lua``) are described.
@@ -58,13 +54,11 @@ In this section, the effectiveness of our framework is demonstrated using two mo
 
 First, on the smaller dataset, where 18k patches (10k normal and 8k tumor) are used for training and 5k patches are used for testing, the Receiver Operating Characteristics (ROC) curve is shown below.
 
-![alt text][ROC-small]
-[ROC-small]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-small.png "ROC-small"
+![ROC-small](./figures/ROC-small.png)
 
 Then, on the full dataset, where 35k patches (18k normal and 17k tumor) are used for training and 12k patches are used for testing, the ROC is shown below.
 
-![alt text][ROC-full]
-[ROC-full]: https://cdn.rawgit.com/lifangda01/BME595-DeepLearning/master/project/figures/ROC-full.png "ROC-full"
+![ROC-full](./figures/ROC-full.png)
 
 The overall best accuracy is reported in the table below.
 
